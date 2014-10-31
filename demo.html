@@ -6,13 +6,16 @@
 
   <script src="../platform/platform.js"></script>
   <link rel="import" href="th-geocoder-firebase.html">
+  <link rel="import" href="../th-google-map/th-google-map.html">
 
 </head>
 <body unresolved>
 
   <p>An `th-geocoder-firebase` looks like this:</p>
 
-  <th-geocoder-firebase></th-geocoder-firebase>
+  <th-geocoder-firebase id="geocoderFirebase" firebaseDirectory="geocodes" input="New York, NY"></th-geocoder-firebase>
+  <th-google-map markers="{{$.geocoder.output}}" fitToMarkers="true" width="400" height="400"></th-google-map>
+
 
 </body>
 </html>

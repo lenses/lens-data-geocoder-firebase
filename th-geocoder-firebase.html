@@ -1,4 +1,6 @@
 <link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../th-firebase/th-firebase.html">
+<link rel="import" href="../th-geocoder/th-geocoder.html">
 
 <!--
 Element providing solution to no problem in particular.
@@ -12,73 +14,54 @@ Element providing solution to no problem in particular.
 @status alpha
 @homepage http://polymerlabs.github.io/th-geocoder-firebase
 -->
-<polymer-element name="th-geocoder-firebase" attributes="notitle author">
+<polymer-element name="th-geocoder-firebase" attributes="input reverseGeocode firebaseDirectory firebaseLocationRequestRoute firebaseLocation">
 
   <template>
-
-    <link rel="stylesheet" href="th-geocoder-firebase.css" />
-
-    <h1>Hello from th-geocoder-firebase</h1>
-    <content></content>
+    <th-firebase id="firebase" directory="{{firebaseDirectory}}" locationRequestRoute="{{firebaseLocationRequestRoute}}" location="{{firebaseLocation}}" ></th-firebase>
+    <th-geocoder id="geocoder" input="{{input | checkFirebase}}"></th-geocoder>
+    akdjakd
 
   </template>
 
   <script>
 
     Polymer({
-      /**
-       * The `author` attribute sets an initial author
-       *
-       * @attribute author
-       * @type string
-       * @default 'Dimitri Glazkov'
-       */
-      author: 'Dimitri Glazkov',
-
-      /**
-       * `fancy` is a property that does something fancy.
-       *
-       * @property fancy
-       * @type bool
-       * @default false
-       */
-      fancy: false,
-
+      
       ready: function() {
-        // Ready is a lifecycle callback.
-        // You can do setup work in here.
-        // More info: http://www.polymer-project.org/docs/polymer/polymer.html#lifecyclemethods
+        var self = this;
+        self.readyForInput = true;
+        self.firebase = self.$.firebase;
+        self.geocoder = self.$.geocoder;
+        console.log("polymer ready");
+
+        self.firebase.addEventListener('th-data-ready', function(response) {
+            // Data found in firebase, so load into component
+            console.log("data received");
+            console.log(response.detail);
+            // self.loadData(response.detail);
+          });
+        self.firebase.addEventListener('th-data-error', function(response) {
+          // No data in firebase for that URL, so call parse
+          console.log("not found");
+          console.log(response.detail);
+          // self.parseData(); 
+        });
       },
+      checkFirebase: function(value){
+        var self = this;
 
-      /**
-       * The `sayHello` method will return a greeting.
-       *
-       * @method sayHello
-       * @param {String} greeting Pass in a specific greeting.
-       * @return {String} Returns a string greeting.
-       */
-      sayHello: function(greeting) {
-        var response = greeting || 'Hello World!';
-        return 'th-geocoder-firebase says, ' + response;
-      },
-
-      /**
-       * The `th-geocoder-firebase-lasers-success` event is fired whenever we
-       * call fireLasers.
-       *
-       * @event th-geocoder-firebase-lasers-success
-       * @param {Object} detail
-       *   @param {string} detail.sound An amazing sound.
-       */
-
-      /**
-       * The `fireLasers` method will fire the lasers. At least
-       * it will dispatch an event that claims lasers were fired :)
-       *
-       * @method fireLasers
-       */
-      fireLasers: function() {
-        this.fire('th-geocoder-firebase-lasers-success', { sound: 'Pew pew pew!' });
+        // This filter runs a split second before the ready callback, so created an interval to wait for it
+        var waitForReady = setInterval(function(){
+          if(self.readyForInput){
+            console.log(value);
+            
+            self.firebase.load(value);
+          
+            clearInterval(waitForReady);
+            return value;
+          }
+        },10)
+        
       }
 
     });
