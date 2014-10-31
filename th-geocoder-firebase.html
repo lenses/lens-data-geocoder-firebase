@@ -14,54 +14,84 @@ Element providing solution to no problem in particular.
 @status alpha
 @homepage http://polymerlabs.github.io/th-geocoder-firebase
 -->
-<polymer-element name="th-geocoder-firebase" attributes="input reverseGeocode firebaseDirectory firebaseLocationRequestRoute firebaseLocation">
+<polymer-element name="th-geocoder-firebase" attributes="input reverseGeocode firebaseDirectory firebaseLocationRequestRoute firebaseLocation output">
 
   <template>
     <th-firebase id="firebase" directory="{{firebaseDirectory}}" locationRequestRoute="{{firebaseLocationRequestRoute}}" location="{{firebaseLocation}}" ></th-firebase>
-    <th-geocoder id="geocoder" input="{{input | checkFirebase}}"></th-geocoder>
-    akdjakd
-
+    <th-geocoder id="geocoder" input="{{geocodeInput}}" ></th-geocoder>
   </template>
 
   <script>
 
     Polymer({
-      
+      input: [{'address1':'1501 Lexington Avenue, New York, NY 10029', 'address2':'Columbus Circle, New York, NY'}, {'address1':'54 West 40th Street, New York, NY 10018', 'address2':'Brooklyn Bridge Park, New York, NY'},{'address1':'54 West 50th Street, New York, NY', 'address2':'Central Park, New York, NY'}], // array of objects
+      reverseGeocode: false, 
+      firebaseDirectory: 'geocodes/',
       ready: function() {
         var self = this;
-        self.readyForInput = true;
         self.firebase = self.$.firebase;
         self.geocoder = self.$.geocoder;
-        console.log("polymer ready");
+  
+        // Create hash for unique identifier of input for firebase
+        var input = self.input.toString(),
+            inputLength = input.length;
+        self.hash = 0;
+          var i, chr, len;
+            if (inputLength == 0) return self.hash;
+            for (i = 0; i < inputLength; i++) {
+              chr   = input.charCodeAt(i);
+              self.hash  = ((self.hash << 5) - self.hash) + chr;
+              self.hash |= 0; // Convert to 32bit integer
+            }
 
+        // Listen for geocode output ready event
+        self.geocoder.addEventListener('th-output-ready', function(response) {
+          console.log("data received from geocoder");
+          self.output = response.detail;
+          self.saveToFirebase();
+        })
+        
+        // Setup and check firebase for input
+        self.setupFirebase();
+        self.checkFirebase();
+
+      },
+      setupFirebase: function(){
+        var self = this;
+      
+        // Listen for firebase responses
         self.firebase.addEventListener('th-data-ready', function(response) {
-            // Data found in firebase, so load into component
-            console.log("data received");
-            console.log(response.detail);
-            // self.loadData(response.detail);
+            // Data found in firebase, so output is ready
+            console.log("data received from firebase");
+            console.log(response.detail)
+            self.receiveFromFirebase(response.detail);
           });
+
         self.firebase.addEventListener('th-data-error', function(response) {
-          // No data in firebase for that URL, so call parse
-          console.log("not found");
-          console.log(response.detail);
-          // self.parseData(); 
+          // No data in firebase for that URL, so pass it to th-geocoder
+          console.log("not found in firebase, send to geocoder");
+          self.geocodeInput = self.input;
         });
       },
-      checkFirebase: function(value){
+      checkFirebase: function(){
         var self = this;
-
-        // This filter runs a split second before the ready callback, so created an interval to wait for it
-        var waitForReady = setInterval(function(){
-          if(self.readyForInput){
-            console.log(value);
-            
-            self.firebase.load(value);
-          
-            clearInterval(waitForReady);
-            return value;
-          }
-        },10)
-        
+        console.log("check firebase");
+        self.firebase.load(self.hash);
+      },
+      saveToFirebase: function(){
+        var self = this; 
+        console.log("save to firebase");
+        self.firebase.save(self.output, self.hash);
+      },
+      receiveFromFirebase: function(geocodes){
+        var self = this;
+        console.log("retrieved from firebase");
+        self.output = geocodes;
+      },
+      inputChanged: function(){
+        var self = this;
+        console.log("input changed");
+        self.checkFirebase();
       }
 
     });
