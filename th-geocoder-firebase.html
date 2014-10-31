@@ -32,6 +32,8 @@ Element providing solution to no problem in particular.
         self.firebase = self.$.firebase;
         self.geocoder = self.$.geocoder;
   
+        //TODO: figure out how to show the menu in the geocoder when the data is found in firebase (_dataAttributes needs to be set);
+
         // Create hash for unique identifier of input for firebase
         var input = self.input.toString(),
             inputLength = input.length;
