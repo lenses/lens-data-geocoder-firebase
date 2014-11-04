@@ -7,6 +7,7 @@
   <script src="../platform/platform.js"></script>
   <link rel="import" href="th-geocoder-firebase.html">
   <link rel="import" href="../th-google-map/th-google-map.html">
+  <link rel="import" href="../th-csv/th-csv.html">
 
 </head>
 <body unresolved>
@@ -14,7 +15,8 @@
   <p>An `th-geocoder-firebase` looks like this:</p>
 
   <template is="auto-binding">
-    <th-geocoder-firebase id="geocoderFirebase" firebaseLocation="https://sweltering-fire-3844.firebaseio.com/"></th-geocoder-firebase>
+    <th-csv id="data" url="/th-geocoder/berlin.csv"></th-csv>
+    <th-geocoder-firebase id="geocoderFirebase" input="{{$.data.output}}" firebaseLocation="https://sweltering-fire-3844.firebaseio.com/"></th-geocoder-firebase>
     <th-google-map markers="{{$.geocoderFirebase.output}}" fitToMarkers="true" width="400" height="400"></th-google-map>
   </template>
 
