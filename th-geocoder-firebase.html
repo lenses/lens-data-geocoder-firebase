@@ -14,7 +14,33 @@ Element providing solution to no problem in particular.
 @homepage http://polymerlabs.github.io/th-geocoder-firebase
 -->
 <polymer-element name="th-geocoder-firebase" extends="th-geocoder" attributes="input reverseGeocode output firebaseLocation">
-<template>
+<template>  
+  <style>
+        core-selector {
+        min-height: 10px;
+        display: inline-block;
+      }
+
+      core-selector .col {
+        padding: 3px;
+        border: 1px solid #ccc;
+      }
+      core-selector .core-selected {
+        background-color: #ccc;
+        border: 1px solid #888;
+      }
+
+      label {
+        display: block;
+        color: #2fa3af;
+        border-top: 1px solid #AAA;
+      }
+
+      .elTitle {
+        color: #2fa3af;
+        padding: 2px;
+      }
+  </style>
   
     <th-firebase id="firebase" directory="geocodes/" locationRequestRoute="{{firebaseLocationRequestRoute}}" location="{{firebaseLocation}}" ></th-firebase>
     
@@ -50,6 +76,13 @@ Element providing solution to no problem in particular.
       // input: '40.7863301, -73.95027060000001', // coordinates for reverseGeocode => set reverseGeocode = true;
       // input: [{'address1':'1501 Lexington Avenue, New York, NY 10029', 'address2':'Columbus Circle, New York, NY'}, {'address1':'54 West 40th Street, New York, NY 10018', 'address2':'Brooklyn Bridge Park, New York, NY'}], // array of objects
       // input: {'address': '1501 Lexington Avenue, New York, NY 10029' }, // object
+      inputChanged:function(){
+        var self = this;
+        self.output = [];
+        self.parseInput();
+        self.getLocations();
+        // console.log("inputChanged");
+      },
       getLocations: function(){
         var self = this,
             inputLength = self.inputArray.length,
@@ -107,6 +140,7 @@ Element providing solution to no problem in particular.
       },
       outputChanged: function(){
         var self = this;
+        self.fire('th-output-changed', self);
         // When output is ready, fire event for other components to use
         if ((self.output.length + self.errors.length) >= self.inputLength){
           self.fire('th-output-ready', self.output)
