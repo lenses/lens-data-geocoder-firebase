@@ -71,6 +71,15 @@ Element providing solution to no problem in particular.
   <script>
 
     Polymer({
+      ready: function(){
+        var self = this;
+
+        self.firebase = self.$.firebase;
+        console.log(self.firebase);
+        self.setupFirebase();
+    
+
+      },
       // input: 'New York, NY', // string
       // input: ['1501 Lexington Avenue, New York, NY 10029', '54 West 40th Street, New York, NY 10018'], // array
       // input: '40.7863301, -73.95027060000001', // coordinates for reverseGeocode => set reverseGeocode = true;
@@ -78,18 +87,34 @@ Element providing solution to no problem in particular.
       // input: {'address': '1501 Lexington Avenue, New York, NY 10029' }, // object
       inputChanged:function(){
         var self = this;
+        console.log('geocoder-firebase input changed');
+        self.fire('th-input-changed', self);
+        console.log('clear output');
         self.output = [];
+        self.errors = [];
         self.parseInput();
-        self.getLocations();
-        // console.log("inputChanged");
+        self.hash = self.createHash(self.inputArray);
+        self.checkFirebase();
       },
-      getLocations: function(){
-        var self = this,
-            inputLength = self.inputArray.length,
-            i = 0;
-        
-        self.firebase = self.$.firebase;
+      _selectedLabelChanged: function(){
+        console.log('geocoder-firebase selection changed');
+        var self = this;
+        console.log('clear output');
+        self.output = [];
+        self.errors = [];
+        if(self.input.length > 0){
+          self.inputArray = self.input.map(function(obj){return obj[self._selectedLabel]});
+        } else {
+          self.inputArray = [self.input[self._selectedLabel]];
+        }
+        self.hash = self.createHash(self.inputArray);
+        self.checkFirebase();
 
+      },
+      setupFirebase: function(){
+        console.log('setup firebase');
+        var self = this;
+        
         // Listen for firebase responses
         self.firebase.addEventListener('th-data-ready', function(response) {
             // Data found in firebase, so output is ready
@@ -100,20 +125,11 @@ Element providing solution to no problem in particular.
         self.firebase.addEventListener('th-data-error', function(response) {
           // No data in firebase for that URL, so pass it to th-geocoder
           console.log("not found in firebase, request from geocode API");
-          var interval = setInterval(function(){
-              self.geocodeFunc(self.inputArray[i], self.output);
-              i++;
-              if(i === inputLength) {
-                clearInterval(interval);
-              }
-          }, 300); 
-          
+          self.getLocations();
         });
-        
-        self.hash = self.createHash(self.inputArray);
-        self.checkFirebase();
       },
       createHash: function(input){
+        console.log('create hash');
         var input = input.toString(),
             inputLength = input.length;
         
@@ -129,8 +145,8 @@ Element providing solution to no problem in particular.
         return hash;
       },
       checkFirebase: function(){
+        console.log('check firebase');
         var self = this;
-        console.log("check firebase for geocodes");
         self.firebase.load(self.hash);
       },
       saveToFirebase: function(){
