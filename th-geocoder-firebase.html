@@ -1,6 +1,8 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../th-geocoder/th-geocoder.html">
 <link rel="import" href="../th-firebase/th-firebase.html">
+<link rel="import" href="../aha-table/src/aha-table.html">
+<link rel="import" href="../sortable-table/sortable-table.html">
 <!--
 Element providing solution to no problem in particular.
 
@@ -16,7 +18,8 @@ Element providing solution to no problem in particular.
 <polymer-element name="th-geocoder-firebase" extends="th-geocoder" attributes="input reverseGeocode output firebaseLocation">
 <template>  
   <style>
-        core-selector {
+
+      core-selector {
         min-height: 10px;
         display: inline-block;
       }
@@ -40,6 +43,17 @@ Element providing solution to no problem in particular.
         color: #2fa3af;
         padding: 2px;
       }
+
+      .disabled {
+        color: #EEE;
+      }
+
+      .table-container {
+        width: 500px;
+        height: 400px;
+        overflow: scroll;
+        resize: both;
+      }
   </style>
   
     <th-firebase id="firebase" directory="geocodes/" locationRequestRoute="{{firebaseLocationRequestRoute}}" location="{{firebaseLocation}}" ></th-firebase>
@@ -55,17 +69,21 @@ Element providing solution to no problem in particular.
       </core-selector>
     </core-collapse>
     
-    <p>{{errors.length}} location(s) NOT found:</p>
-    <template repeat="{{error in errors}}">
-      <li>Location: {{error.location}}, reason: {{error.reason}}</li>
-    </template>
+    <core-icon-button icon="view-list" on-click="{{showResults}}" class="{{ output.length < 1 ? 'disabled': ''}}"></core-icon-button>
 
-    <p>{{output.length}} location(s) found:</p>
-    <template repeat="{{place in output}}">
-      <li>{{place.label}}: ({{place.latitude}}, {{place.longitude}})</li>
-    </template>
-  </template>
-    
+    <core-collapse id="results_collapse">
+
+      <div class="table-container">
+        <template if="{{errors.length >0}}">
+          <p>{{errors.length}} location(s) NOT found:</p>
+          <aha-table id="errorsTable" data="{{output}}" pagesize="10" editable="false"  class="bootstrap" showFooter="true"></aha-table>
+        </template>
+        
+        <p>{{output.length}} location(s) found:</p>
+        <aha-table id="outputTable" data="{{output}}" pagesize="20" editable="false"  class="bootstrap" showFooter="true"></aha-table>
+        
+      </div>
+    </core-collapse>
   </template>
 
   <script>
@@ -164,7 +182,18 @@ Element providing solution to no problem in particular.
           self.saveToFirebase();
         }
         self.displayErrors();
-      }
+        self.showTableData();
+      },
+      showTableData: function(){
+        var self = this;
+        self.$.outputTable.data = self.output.map(function(item){ return {'Location': item.input, 'Latitude': item.latitude, 'Longitude': item.longitude} });
+        self.$.errorsTable.data = self.errors;
+      },
+      showResults: function(e) {
+        if(this.output.length > 0) {
+          this.$.results_collapse.toggle();
+        }
+      }, 
     });
 
   </script>
