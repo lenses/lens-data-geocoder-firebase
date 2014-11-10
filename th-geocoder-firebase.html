@@ -74,13 +74,13 @@ Element providing solution to no problem in particular.
     <core-collapse id="results_collapse">
 
       <div class="table-container">
-        <template if="{{errors.length >0}}">
+        <template if="{{errorData}}">
           <p>{{errors.length}} location(s) NOT found:</p>
-          <aha-table id="errorsTable" data="{{output}}" pagesize="10" editable="false"  class="bootstrap" showFooter="true"></aha-table>
+          <aha-table id="errorsTable"  pagesize="10" editable="false"  class="bootstrap" showFooter="true"></aha-table>
         </template>
         
         <p>{{output.length}} location(s) found:</p>
-        <aha-table id="outputTable" data="{{output}}" pagesize="20" editable="false"  class="bootstrap" showFooter="true"></aha-table>
+        <aha-table id="outputTable"  pagesize="20" editable="false"  class="bootstrap" showFooter="true"></aha-table>
         
       </div>
     </core-collapse>
@@ -188,6 +188,8 @@ Element providing solution to no problem in particular.
         var self = this;
         self.$.outputTable.data = self.output.map(function(item){ return {'Location': item.input, 'Latitude': item.latitude, 'Longitude': item.longitude} });
         self.$.errorsTable.data = self.errors;
+        console.log("**");
+        console.log(self.$.errorsTable.data);
       },
       showResults: function(e) {
         if(this.output.length > 0) {
