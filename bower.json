@@ -9,7 +9,10 @@
   "main": "th-geocoder-firebase.html",
   "dependencies": {
     "polymer": "Polymer/polymer#^0.4.0",
-    "aha-table": "liuwenchao/aha-table#master"
+    "aha-table": "~1.0.19",
+    "th-firebase": "thelmanews/th-firebase",
+    "th-geocoder": "thelmanews/th-geocoder",
+    "sortable-table": "~0.10.0"
   },
   "devDependencies": {
     "polymer-test-tools": "Polymer/polymer-test-tools#^0.4.0"
