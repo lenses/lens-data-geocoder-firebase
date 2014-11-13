@@ -9,7 +9,7 @@
   "main": "th-geocoder-firebase.html",
   "dependencies": {
     "polymer": "Polymer/polymer#^0.4.0",
-    "aha-table": "~1.0.19",
+    "aha-table": "liuwenchao/aha-table#master",
     "th-firebase": "thelmanews/th-firebase",
     "th-geocoder": "thelmanews/th-geocoder",
     "sortable-table": "~0.10.0"
