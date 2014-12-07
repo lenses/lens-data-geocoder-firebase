@@ -17,7 +17,10 @@ Element providing solution to no problem in particular.
 <polymer-element name="th-geocoder-firebase" extends="th-geocoder" attributes="input reverseGeocode output firebaseLocation">
 <template>  
   <style>
-
+      :host {
+        min-width: 150px;
+      }
+      
       core-selector {
         min-height: 10px;
         display: inline-block;
