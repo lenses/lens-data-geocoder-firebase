@@ -91,6 +91,7 @@ Element providing solution to no problem in particular.
   <script>
 
     Polymer({
+      firebaseLocation: 'https://shining-fire-6376.firebaseio.com/',
       ready: function(){
         var self = this;
 
@@ -107,26 +108,26 @@ Element providing solution to no problem in particular.
       // input: {'address': '1501 Lexington Avenue, New York, NY 10029' }, // object
       inputChanged:function(){
         var self = this;
-        console.log('geocoder-firebase input changed');
         self.fire('th-input-changed', self);
-        console.log('clear output');
-        self.output = [];
+        self.setupOutput();
         self.errors = [];
         self.parseInput();
-        self.hash = self.createHash(self.inputArray);
+
+        // self.hash = self.createHash(self.inputArray);
+
         self.checkFirebase();
       },
       _selectedLabelChanged: function(){
         console.log('geocoder-firebase selection changed');
         var self = this;
-        console.log('clear output');
-        self.output = [];
+        self.setupOutput();
         self.errors = [];
         if(self.input.length > 0){
           self.inputArray = self.input.map(function(obj){return obj[self._selectedLabel]});
         } else {
           self.inputArray = [self.input[self._selectedLabel]];
         }
+
         self.hash = self.createHash(self.inputArray);
         self.checkFirebase();
 
@@ -188,10 +189,9 @@ Element providing solution to no problem in particular.
       },
       showTableData: function(){
         var self = this;
-        self.$.outputTable.data = self.output.map(function(item){ return {'Location': item.input, 'Latitude': item.latitude, 'Longitude': item.longitude} });
-        self.$.errorsTable.data = self.errors;
-        console.log("**");
-        console.log(self.$.errorsTable.data);
+        // self.$.outputTable.data = self.output.map(function(item){ return {'Location': item.input, 'Latitude': item.latitude, 'Longitude': item.longitude} });
+        // self.$.errorsTable.data = self.errors;
+
       },
       showResults: function(e) {
         if(this.output.length > 0) {
