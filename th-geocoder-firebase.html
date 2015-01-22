@@ -63,7 +63,7 @@ Element providing solution to no problem in particular.
     <!-- Menu for selecting input --> 
     <core-icon-button icon="perm-data-setting" on-click="{{showControls}}"></core-icon-button>
     <core-collapse id="ctrl_collapse">      
-      <label for="label_selector">Select label column: </label> 
+      <label for="label_selector">Select location column: </label> 
       <core-selector id="label_selector" selected="{{_selectedLabel}}" valueattr="label">
         <template repeat="{{attr in _dataAttributes}}">
           <div label="{{attr}}">{{attr}}</div>
@@ -119,6 +119,7 @@ Element providing solution to no problem in particular.
       },
       _selectedLabelChanged: function(){
         console.log('geocoder-firebase selection changed');
+        console.log('***************');
         var self = this;
         self.setupOutput();
         self.errors = [];
@@ -140,6 +141,7 @@ Element providing solution to no problem in particular.
         self.firebase.addEventListener('th-data-ready', function(response) {
             // Data found in firebase, so output is ready
             console.log("data received from firebase");
+            console.log(response.detail)
             self.output = response.detail;
           });
 
@@ -180,9 +182,11 @@ Element providing solution to no problem in particular.
         self.fire('th-output-changed', self);
         // When output is ready, fire event for other components to use
         if ((self.output.length + self.errors.length) >= self.inputLength){
+          if(self.output[self.output.length-1]['latitude'] && self.output[self.output.length-1]['longitude']){
           self.fire('th-output-ready', self.output)
-          console.log("save geocodes to firebase");
-          self.saveToFirebase();
+          // console.log("save geocodes to firebase");
+          // self.saveToFirebase();
+          }
         }
         self.displayErrors();
         self.showTableData();
