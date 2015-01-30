@@ -14,7 +14,7 @@ Element providing solution to no problem in particular.
 @status alpha
 @homepage http://polymerlabs.github.io/th-geocoder-firebase
 -->
-<polymer-element name="th-geocoder-firebase" extends="th-geocoder" attributes="input reverseGeocode output firebaseLocation">
+<polymer-element name="th-geocoder-firebase" extends="th-geocoder" attributes="input reverseGeocode output firebaseLocation selectedLabel">
 <template>  
   <style>
       :host {
@@ -64,7 +64,7 @@ Element providing solution to no problem in particular.
     <core-icon-button icon="perm-data-setting" on-click="{{showControls}}"></core-icon-button>
     <core-collapse id="ctrl_collapse">      
       <label for="label_selector">Select location column: </label> 
-      <core-selector id="label_selector" selected="{{_selectedLabel}}" valueattr="label">
+      <core-selector id="label_selector" selected="{{selectedLabel}}" valueattr="label">
         <template repeat="{{attr in _dataAttributes}}">
           <div label="{{attr}}">{{attr}}</div>
         </template>
@@ -117,16 +117,16 @@ Element providing solution to no problem in particular.
 
         self.checkFirebase();
       },
-      _selectedLabelChanged: function(){
+      selectedLabelChanged: function(){
         console.log('geocoder-firebase selection changed');
         console.log('***************');
         var self = this;
         self.setupOutput();
         self.errors = [];
         if(self.input.length > 0){
-          self.inputArray = self.input.map(function(obj){return obj[self._selectedLabel]});
+          self.inputArray = self.input.map(function(obj){return obj[self.selectedLabel]});
         } else {
-          self.inputArray = [self.input[self._selectedLabel]];
+          self.inputArray = [self.input[self.selectedLabel]];
         }
 
         self.hash = self.createHash(self.inputArray);
