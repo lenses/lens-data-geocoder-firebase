@@ -56,33 +56,46 @@ Element providing solution to no problem in particular.
         overflow: scroll;
         resize: both;
       }
+      core-selector {
+        min-height: 10px;
+        display: inline-block;
+        max-height: 123px;
+      }
+
+      core-selector .col {
+        display: inline-block;
+        margin: 0 3px;
+        padding: 1px;
+        border: 1px solid #EEE;
+      }
+      core-selector .core-selected {
+        background-color: #ccc;
+
+      }
+      label {
+        vertical-align: top;
+      }
   </style>
   
     <th-firebase id="firebase" directory="geocodes/" locationRequestRoute="{{firebaseLocationRequestRoute}}" location="{{firebaseLocation}}" ></th-firebase>
     
     <!-- Menu for selecting input --> 
-    <core-icon-button icon="perm-data-setting" on-click="{{showControls}}"></core-icon-button>
-    <core-collapse id="ctrl_collapse">      
+  
       <label for="label_selector">Select location column: </label> 
       <core-selector id="label_selector" selected="{{selectedLabel}}" valueattr="label">
         <template repeat="{{attr in _dataAttributes}}">
-          <div label="{{attr}}">{{attr}}</div>
+          <div label="{{attr}}" class="col">{{attr}}</div>
         </template>
       </core-selector>
-    </core-collapse>
     
-    <core-icon-button icon="view-list" on-click="{{showResults}}" class="{{ output.length < 1 ? 'disabled': ''}}"></core-icon-button>
-
-    <core-collapse id="results_collapse">
-
-      <div class="table-container">
-        <template if="{{errorData}}">
+        <p>{{firebaseOutput.length}} of {{input.length}} locations processed.</p>
+        <template if="{{errors.length > 0}}">
           <p>{{errors.length}} location(s) NOT found:</p>
-          <aha-table id="errorsTable"  pagesize="10" editable="false"  class="bootstrap" showFooter="true"></aha-table>
+          <template repeat="{{error in errors}}">
+            <li><strong> Location: </strong>{{error.location}} <strong> Reason: </strong>{{error.reason}}</li>
+          </template>
         </template>
         
-        <p>{{output.length}} location(s) found:</p>
-        <aha-table id="outputTable"  pagesize="20" editable="false"  class="bootstrap" showFooter="true"></aha-table>
         
       </div>
     </core-collapse>
@@ -91,21 +104,14 @@ Element providing solution to no problem in particular.
   <script>
 
     Polymer({
+      // input: [{'address1':'1501 Lexington Avenue, New York, NY 10029', 'address2':'Columbus Circle, New York, NY'}, {'address1':'54 West 40th Street, New York, NY 10018', 'address2':'Brooklyn Bridge Park, New York, NY'}], // array of objects
       firebaseLocation: 'https://shining-fire-6376.firebaseio.com/',
       ready: function(){
         var self = this;
 
         self.firebase = self.$.firebase;
-        // console.log(self.firebase);
         self.setupFirebase();
-    
-
       },
-      // input: 'New York, NY', // string
-      // input: ['1501 Lexington Avenue, New York, NY 10029', '54 West 40th Street, New York, NY 10018'], // array
-      // input: '40.7863301, -73.95027060000001', // coordinates for reverseGeocode => set reverseGeocode = true;
-      // input: [{'address1':'1501 Lexington Avenue, New York, NY 10029', 'address2':'Columbus Circle, New York, NY'}, {'address1':'54 West 40th Street, New York, NY 10018', 'address2':'Brooklyn Bridge Park, New York, NY'}], // array of objects
-      // input: {'address': '1501 Lexington Avenue, New York, NY 10029' }, // object
       inputChanged:function(){
         var self = this;
         self.fire('th-input-changed', self);
@@ -121,6 +127,8 @@ Element providing solution to no problem in particular.
         console.log('geocoder-firebase selection changed');
         console.log('***************');
         var self = this;
+        self.firebaseOutput = [];
+        self.errors = [];
         self.setupOutput();
         self.errors = [];
         if(self.input.length > 0){
@@ -141,9 +149,7 @@ Element providing solution to no problem in particular.
         self.firebase.addEventListener('th-data-ready', function(response) {
             // Data found in firebase, so output is ready
             console.log("data received from firebase");
-            console.log(response.detail)
             self.mapOutputFromFirebase(response.detail);
-            // self.output = response.detail;
           });
 
         self.firebase.addEventListener('th-data-error', function(response) {
@@ -176,17 +182,19 @@ Element providing solution to no problem in particular.
       saveToFirebase: function(){
         var self = this;
         console.log("save geocodes to firebase");
-        self.firebase.save(self.outputToSave, self.hash);
+        self.firebase.save(self.firebaseOutput, self.hash);
       },
-      outputToSaveChanged: function(){
+      firebaseOutputChanged: function(){
         var self = this;
-        if (self.outputToSave.length === self.inputArray.length){
+        if (self.firebaseOutput.length === self.inputArray.length){
           self.saveToFirebase();
-
         }
       },
       mapOutputFromFirebase: function(geocodesArr){
+        console.log("combine firebase result with input data")
         var self = this;
+        self.firebaseOutput = geocodesArr;
+        self.errors=[];
         self.output = self.input.map(function(item){
           var newItem = {},
               keys = Object.keys(item);
@@ -197,7 +205,12 @@ Element providing solution to no problem in particular.
             if(geocode.input === item[self.selectedLabel]){
               newItem.latitude = geocode.latitude;
               newItem.longitude = geocode.longitude;
+              if(geocode.errors){
+                self.errors.push(geocode.errors);
+                // save errors to firebaseOutput
+              }
             }
+
           })
           return newItem;
 
@@ -207,29 +220,16 @@ Element providing solution to no problem in particular.
         var self = this;
         self.fire('th-output-changed', self);
         // When output is ready, fire event for other components to use
-        if ((self.output.length + self.errors.length) >= self.inputLength){
+        if (self.output.length === self.inputLength){
           if(self.output[self.output.length-1]['latitude'] && self.output[self.output.length-1]['longitude']){
+          console.log('geocoder output ready');
           self.fire('th-output-ready', self.output)
-          // console.log("save geocodes to firebase");
-          // self.saveToFirebase();
           }
         }
-        self.displayErrors();
-        self.showTableData();
-      },
-      showTableData: function(){
-        var self = this;
-        // self.$.outputTable.data = self.output.map(function(item){ return {'Location': item.input, 'Latitude': item.latitude, 'Longitude': item.longitude} });
-        // self.$.errorsTable.data = self.errors;
-
-      },
-      showResults: function(e) {
-        if(this.output.length > 0) {
-          this.$.results_collapse.toggle();
-        }
-      }, 
+      }    
     });
 
   </script>
 
 </polymer-element>
+;
