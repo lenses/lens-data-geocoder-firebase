@@ -35,12 +35,6 @@ Element providing solution to no problem in particular.
         border: 1px solid #888;
       }
 
-      label {
-        display: block;
-        color: #2fa3af;
-        border-top: 1px solid #AAA;
-      }
-
       .elTitle {
         color: #2fa3af;
         padding: 2px;
@@ -73,32 +67,32 @@ Element providing solution to no problem in particular.
 
       }
       label {
+        display: block;
+        color: #2fa3af;
+        border-top: 1px solid #AAA;
         vertical-align: top;
       }
   </style>
   
     <th-firebase id="firebase" directory="geocodes/" locationRequestRoute="{{firebaseLocationRequestRoute}}" location="{{firebaseLocation}}" ></th-firebase>
     
-    <!-- Menu for selecting input --> 
-  
-      <label for="label_selector">Select location column: </label> 
-      <core-selector id="label_selector" selected="{{selectedLabel}}" valueattr="label">
-        <template repeat="{{attr in _dataAttributes}}">
-          <div label="{{attr}}" class="col">{{attr}}</div>
-        </template>
-      </core-selector>
+    <!-- Menu for selecting input column --> 
+    <label for="label_selector">Select location column: </label> 
+    <core-selector id="label_selector" selected="{{selectedLabel}}" valueattr="label">
+      <template repeat="{{attr in _dataAttributes}}">
+        <div label="{{attr}}" class="col">{{attr}}</div>
+      </template>
+    </core-selector>
     
-        <p>{{firebaseOutput.length}} of {{input.length}} locations processed.</p>
-        <template if="{{errors.length > 0}}">
-          <p>{{errors.length}} location(s) NOT found:</p>
-          <template repeat="{{error in errors}}">
-            <li><strong> Location: </strong>{{error.location}} <strong> Reason: </strong>{{error.reason}}</li>
-          </template>
-        </template>
+    <!-- Progress and error details --> 
+    <p>{{firebaseOutput.length}} of {{input.length}} locations processed.</p>
+    <template if="{{errors.length > 0}}">
+      <p>{{errors.length}} location(s) NOT found:</p>
+      <template repeat="{{error in errors}}">
+        <li><strong> Location: </strong>{{error.location}} <strong> Reason: </strong>{{error.reason}}</li>
+      </template>
+    </template>
         
-        
-      </div>
-    </core-collapse>
   </template>
 
   <script>
@@ -109,10 +103,13 @@ Element providing solution to no problem in particular.
       firebaseLocation: 'https://shining-fire-6376.firebaseio.com/',
       ready: function(){
         var self = this;
-
         self.firebase = self.$.firebase;
         self.setupFirebase();
       },
+      /**
+       * inputChanged - when input changes, reset the outputs, and send it back through the parser
+       * @return {[type]} [description]
+       */
       inputChanged:function(){
         var self = this;
         self.fire('th-input-changed', self);
@@ -124,6 +121,9 @@ Element providing solution to no problem in particular.
 
         self.checkFirebase();
       },
+      /**
+       * selectedLabelChanged - when selection changes, clear the results and restart the process of geocoding
+       */
       selectedLabelChanged: function(){
         console.log('geocoder-firebase selection changed');
         var self = this;
@@ -141,6 +141,9 @@ Element providing solution to no problem in particular.
         self.checkFirebase();
 
       },
+      /**
+       * setupFirebase - set event listeners for responses from firebase and the appropriate responses
+       */
       setupFirebase: function(){
         console.log('setup firebase');
         var self = this;
@@ -158,6 +161,11 @@ Element providing solution to no problem in particular.
           self.getLocations();
         });
       },
+      /**
+       * createHash - converts the input into a unique identifier, used as a key to save geocodes in firebase
+       * @param  {Array} input - an array of strings, representing the locations that need geocodes
+       * @return {String} hash - the resulting unique identifier
+       */
       createHash: function(input){
         console.log('create hash');
         var input = input.toString(),
@@ -174,22 +182,36 @@ Element providing solution to no problem in particular.
             
         return hash;
       },
+      /**
+       * checkFirebase - once the hash for inputs is created, check if geocodes are in firebase
+       */
       checkFirebase: function(){
         console.log('check firebase');
         var self = this;
         self.firebase.load(self.hash);
       },
-      saveToFirebase: function(){
-        var self = this;
-        console.log("save geocodes to firebase");
-        self.firebase.save(self.firebaseOutput, self.hash);
-      },
+      /**
+       * firebaseOutputChanged - when the output for firebase is finished, call saveToFirebase()
+       */
       firebaseOutputChanged: function(){
         var self = this;
         if (self.firebaseOutput.length === self.inputArray.length){
           self.saveToFirebase();
         }
       },
+      /**
+       * saveToFirebase - send the collected geocodes to firebase with the hash as the identifier
+       * @return {[type]} [description]
+       */
+      saveToFirebase: function(){
+        var self = this;
+        console.log("save geocodes to firebase");
+        self.firebase.save(self.firebaseOutput, self.hash);
+      },
+      /**
+       * mapOutputFromFirebase - called when a response is received from firebase, and maps the response to the existing dataset
+       * @param  {Array} geocodesArr - array of objects containing lat/lng coordinates and any potential errors
+       */
       mapOutputFromFirebase: function(geocodesArr){
         console.log("combine firebase result with input data")
         var self = this;
@@ -219,6 +241,10 @@ Element providing solution to no problem in particular.
 
         })
       },
+      /**
+       * outputChanged - when output changes, check if the entire output is ready and fire an event
+       * @return {[type]} [description]
+       */
       outputChanged: function(){
         var self = this;
         self.fire('th-output-changed', self);
