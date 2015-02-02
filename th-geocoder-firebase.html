@@ -96,7 +96,7 @@ Element providing solution to no problem in particular.
         var self = this;
 
         self.firebase = self.$.firebase;
-        console.log(self.firebase);
+        // console.log(self.firebase);
         self.setupFirebase();
     
 
@@ -142,7 +142,8 @@ Element providing solution to no problem in particular.
             // Data found in firebase, so output is ready
             console.log("data received from firebase");
             console.log(response.detail)
-            self.output = response.detail;
+            self.mapOutputFromFirebase(response.detail);
+            // self.output = response.detail;
           });
 
         self.firebase.addEventListener('th-data-error', function(response) {
@@ -175,7 +176,32 @@ Element providing solution to no problem in particular.
       saveToFirebase: function(){
         var self = this;
         console.log("save geocodes to firebase");
-        self.firebase.save(self.output, self.hash);
+        self.firebase.save(self.outputToSave, self.hash);
+      },
+      outputToSaveChanged: function(){
+        var self = this;
+        if (self.outputToSave.length === self.inputArray.length){
+          self.saveToFirebase();
+
+        }
+      },
+      mapOutputFromFirebase: function(geocodesArr){
+        var self = this;
+        self.output = self.input.map(function(item){
+          var newItem = {},
+              keys = Object.keys(item);
+          keys.forEach(function(key) {
+            newItem[key] = item[key];
+          })
+          geocodesArr.forEach(function(geocode){
+            if(geocode.input === item[self.selectedLabel]){
+              newItem.latitude = geocode.latitude;
+              newItem.longitude = geocode.longitude;
+            }
+          })
+          return newItem;
+
+        })
       },
       outputChanged: function(){
         var self = this;
