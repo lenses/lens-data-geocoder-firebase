@@ -105,6 +105,7 @@ Element providing solution to no problem in particular.
 
     Polymer({
       // input: [{'address1':'1501 Lexington Avenue, New York, NY 10029', 'address2':'Columbus Circle, New York, NY'}, {'address1':'54 West 40th Street, New York, NY 10018', 'address2':'Brooklyn Bridge Park, New York, NY'}], // array of objects
+      firebaseOutput: [],
       firebaseLocation: 'https://shining-fire-6376.firebaseio.com/',
       ready: function(){
         var self = this;
@@ -125,7 +126,6 @@ Element providing solution to no problem in particular.
       },
       selectedLabelChanged: function(){
         console.log('geocoder-firebase selection changed');
-        console.log('***************');
         var self = this;
         self.firebaseOutput = [];
         self.errors = [];
@@ -194,23 +194,26 @@ Element providing solution to no problem in particular.
         console.log("combine firebase result with input data")
         var self = this;
         self.firebaseOutput = geocodesArr;
-        self.errors=[];
+        self.errors=[]; 
         self.output = self.input.map(function(item){
+          // Clone new object
           var newItem = {},
               keys = Object.keys(item);
           keys.forEach(function(key) {
             newItem[key] = item[key];
           })
           geocodesArr.forEach(function(geocode){
+            // Match coordinates to the correct place
             if(geocode.input === item[self.selectedLabel]){
+              
               newItem.latitude = geocode.latitude;
               newItem.longitude = geocode.longitude;
+              
+              // Collect errors to display
               if(geocode.errors){
                 self.errors.push(geocode.errors);
-                // save errors to firebaseOutput
               }
             }
-
           })
           return newItem;
 
