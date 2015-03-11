@@ -1,5 +1,5 @@
 <link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../th-geocoder/th-geocoder.html">
+<link rel="import" href="../lens-geocoder/lens-geocoder.html">
 <link rel="import" href="../th-firebase/th-firebase.html">
 <!--
 Element providing solution to no problem in particular.
@@ -13,7 +13,7 @@ Element providing solution to no problem in particular.
 @status alpha
 @homepage http://polymerlabs.github.io/lens-geocoder-firebase
 -->
-<polymer-element name="lens-geocoder-firebase" extends="th-geocoder" attributes="input reverseGeocode output firebaseLocation selectedLabel">
+<polymer-element name="lens-geocoder-firebase" extends="lens-geocoder" attributes="input reverseGeocode output firebaseLocation selectedLabel">
 <template>  
   <style>
       :host {
@@ -126,7 +126,7 @@ Element providing solution to no problem in particular.
           });
 
         self.firebase.addEventListener('th-data-error', function(response) {
-          // No data in firebase for that URL, so pass it to th-geocoder
+          // No data in firebase for that URL, so pass it to lens-geocoder
           console.log("not found in firebase, request from geocode API");
           self.getLocations();
         });
