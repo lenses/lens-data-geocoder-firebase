@@ -1,12 +1,12 @@
 {
-  "name": "th-geocoder-firebase",
+  "name": "lens-geocoder-firebase",
   "version": "0.0.0",
   "keywords": [
     "seed",
     "polymer",
     "web-components"
   ],
-  "main": "th-geocoder-firebase.html",
+  "main": "lens-geocoder-firebase.html",
   "dependencies": {
     "polymer": "Polymer/polymer#~0.5.1",
     "aha-table": "liuwenchao/aha-table#master",
