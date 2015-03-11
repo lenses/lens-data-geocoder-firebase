@@ -9,8 +9,7 @@
   "main": "lens-geocoder-firebase.html",
   "dependencies": {
     "polymer": "Polymer/polymer#~0.5.1",
-    "aha-table": "liuwenchao/aha-table#master",
     "th-firebase": "thelmanews/th-firebase",
-    "th-geocoder": "thelmanews/th-geocoder"
+    "lens-geocoder": "lenses/lens-geocoder"
   }
 }
