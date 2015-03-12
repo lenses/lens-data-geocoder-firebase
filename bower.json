@@ -10,6 +10,6 @@
   "dependencies": {
     "polymer": "Polymer/polymer#~0.5.1",
     "th-firebase": "thelmanews/th-firebase",
-    "lens-geocoder": "lenses/lens-geocoder"
+    "lens-data-geocoder": "lenses/lens-data-geocoder"
   }
 }
