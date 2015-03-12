@@ -1,19 +1,19 @@
 <link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../lens-geocoder/lens-geocoder.html">
+<link rel="import" href="../lens-data-geocoder/lens-data-geocoder.html">
 <link rel="import" href="../th-firebase/th-firebase.html">
 <!--
 Element providing solution to no problem in particular.
 
 ##### Example
 
-    <lens-geocoder-firebase></lens-geocoder-firebase>
+    <lens-data-geocoder-firebase></lens-data-geocoder-firebase>
 
-@element lens-geocoder-firebase
+@element lens-data-geocoder-firebase
 @blurb Element providing solution to no problem in particular.
 @status alpha
-@homepage http://polymerlabs.github.io/lens-geocoder-firebase
+@homepage http://polymerlabs.github.io/lens-data-geocoder-firebase
 -->
-<polymer-element name="lens-geocoder-firebase" extends="lens-geocoder" attributes="input reverseGeocode output firebaseLocation selectedLabel">
+<polymer-element name="lens-data-geocoder-firebase" extends="lens-data-geocoder" attributes="input reverseGeocode output firebaseLocation selectedLabel">
 <template>  
   <style>
       :host {
@@ -126,7 +126,7 @@ Element providing solution to no problem in particular.
           });
 
         self.firebase.addEventListener('th-data-error', function(response) {
-          // No data in firebase for that URL, so pass it to lens-geocoder
+          // No data in firebase for that URL, so pass it to lens-data-geocoder
           console.log("not found in firebase, request from geocode API");
           self.getLocations();
         });

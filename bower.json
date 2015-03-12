@@ -1,12 +1,12 @@
 {
-  "name": "lens-geocoder-firebase",
+  "name": "lens-data-geocoder-firebase",
   "version": "0.0.0",
   "keywords": [
     "seed",
     "polymer",
     "web-components"
   ],
-  "main": "lens-geocoder-firebase.html",
+  "main": "lens-data-geocoder-firebase.html",
   "dependencies": {
     "polymer": "Polymer/polymer#~0.5.1",
     "th-firebase": "thelmanews/th-firebase",
