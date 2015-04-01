@@ -2,19 +2,22 @@
 <link rel="import" href="../lens-data-geocoder/lens-data-geocoder.html">
 <link rel="import" href="../th-firebase/th-firebase.html">
 <!--
-Element providing solution to no problem in particular.
+A data transform component that converts data into latitude / longitude or vice
+versa and saves the results to<a href="https://www.firebase.com/" 
+target="_blank">Firebase</a>.
 
 ##### Example
 
     <lens-data-geocoder-firebase></lens-data-geocoder-firebase>
 
 @element lens-data-geocoder-firebase
-@blurb Element providing solution to no problem in particular.
+@blurb A transform component that converts locations into
+latitude / longitude or vice versa and saves the results to Firebase.
 @status alpha
-@homepage http://polymerlabs.github.io/lens-data-geocoder-firebase
+@homepage http://lenses.github.io/lens-data-geocoder-firebase
 -->
 <polymer-element name="lens-data-geocoder-firebase" extends="lens-data-geocoder" attributes="input reverseGeocode output firebaseLocation selectedLabel">
-<template>  
+<template>
   <style>
       :host {
         width: 150px;
@@ -44,31 +47,71 @@ Element providing solution to no problem in particular.
       }
   </style>
   
-    <th-firebase id="firebase" directory="geocodes/" locationRequestRoute="{{firebaseLocationRequestRoute}}" location="{{firebaseLocation}}" ></th-firebase>
-    
-    <!-- Menu for selecting input column --> 
-    <label for="label_selector">Select location column: </label> 
-    <core-selector id="label_selector" selected="{{selectedLabel}}" valueattr="label">
-      <template repeat="{{attr in _dataAttributes}}">
-        <div label="{{attr}}" class="col">{{attr}}</div>
+    <div class="lens-container lens-data">
+      <th-firebase id="firebase" directory="geocodes/" locationRequestRoute="{{firebaseLocationRequestRoute}}" location="{{firebaseLocation}}" ></th-firebase>
+      
+      <!-- Menu for selecting input column --> 
+      <label for="label_selector">Select location column: </label> 
+      <core-selector id="label_selector" selected="{{selectedLabel}}" valueattr="label">
+        <template repeat="{{attr in _dataAttributes}}">
+          <div label="{{attr}}" class="col">{{attr}}</div>
+        </template>
+      </core-selector>
+      
+      <!-- Progress and error details -->
+      <!-- note: this does not work in case of fallback to google api
+        <p>{{firebaseOutput.length}} of {{input.length}} locations processed.</p>
+      -->
+
+      <template if="{{errors.length > 0}}">
+        <p>{{errors.length}} location(s) NOT found:</p>
+        <template repeat="{{error in errors}}">
+          <li><strong> Location: </strong>{{error.location}} <strong> Reason: </strong>{{error.reason}}</li>
+        </template>
       </template>
-    </core-selector>
-    
-    <!-- Progress and error details --> 
-    <p>{{firebaseOutput.length}} of {{input.length}} locations processed.</p>
-    <template if="{{errors.length > 0}}">
-      <p>{{errors.length}} location(s) NOT found:</p>
-      <template repeat="{{error in errors}}">
-        <li><strong> Location: </strong>{{error.location}} <strong> Reason: </strong>{{error.reason}}</li>
-      </template>
-    </template>
-        
+    </div> <!-- end container-->
+
   </template>
 
   <script>
 
     Polymer({
-      // input: [{'address1':'1501 Lexington Avenue, New York, NY 10029', 'address2':'Columbus Circle, New York, NY'}, {'address1':'54 West 40th Street, New York, NY 10018', 'address2':'Brooklyn Bridge Park, New York, NY'}], // array of objects
+      /**
+       *  Array of objects. Examples: <br/><br/>
+       *  <code>['paris, texas', 'toledo, ohio', 'new york, ny']</code><br/>
+       *  <br/>
+       *  <code>[{'addr':'San Francisco, CA'}, {'addr':'Tokyo, Japan'}]</code>
+       *  <br/><br/>
+       *  <code>[{"name": "loc1", "latlng": "35.7090259, 139.73199249999993"},
+       *  {"name": "loc2", "latlng": "40.7017076, -73.99701829999998"}];</code>
+       *  
+       *  @property input
+       *  @type Array
+       *  @default [ ]
+       */
+      /**
+       *  Array of output objects.
+       *  
+       *  @property output
+       *  @type Array
+       *  @default [ ]
+       */
+      /**
+       *  'reverseGeocode' is set to true when input is a set of lat/lng
+       *  coordinates that need to be converted to a location
+       *  
+       *  @property reverseGeocode
+       *  @type Boolean
+       *  @default false
+       */
+      /**
+       *  Label of the column to be geocoded.
+       *  
+       *  @property selectedLabel
+       *  @type String
+       *  @default null
+       */
+
       firebaseOutput: [],
       firebaseLocation: 'https://shining-fire-6376.firebaseio.com/',
       ready: function(){
@@ -208,7 +251,6 @@ Element providing solution to no problem in particular.
             }
           })
           return newItem;
-
         })
       },
       /**
@@ -225,10 +267,9 @@ Element providing solution to no problem in particular.
           self.fire('th-output-ready', self.output)
           }
         }
-      }    
+      }
     });
 
   </script>
 
 </polymer-element>
-;
