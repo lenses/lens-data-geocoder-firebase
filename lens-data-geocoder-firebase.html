@@ -59,9 +59,9 @@ latitude / longitude or vice versa and saves the results to Firebase.
       </core-selector>
       
       <!-- Progress and error details -->
-      <!-- note: this does not work in case of fallback to google api
+      <!-- note: this does not work in case of fallback to google api-->
         <p>{{firebaseOutput.length}} of {{input.length}} locations processed.</p>
-      -->
+      
 
       <template if="{{errors.length > 0}}">
         <p>{{errors.length}} location(s) NOT found:</p>
@@ -69,7 +69,8 @@ latitude / longitude or vice versa and saves the results to Firebase.
           <li><strong> Location: </strong>{{error.location}} <strong> Reason: </strong>{{error.reason}}</li>
         </template>
       </template>
-    </div> <!-- end container-->
+    </div> 
+    
 
   </template>
 
