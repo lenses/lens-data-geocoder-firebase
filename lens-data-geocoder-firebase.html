@@ -75,6 +75,10 @@ Element providing solution to no problem in particular.
         var self = this;
         self.firebase = self.$.firebase;
         self.setupFirebase();
+        // Fired from lens-data-geocoder with object to save to firebase
+        self.addEventListener('lens-new-geocode', function(response){
+          self.firebaseOutput.push(response.detail);
+        })
       },
       /**
        * inputChanged - when input changes, reset the outputs, and send it back through the parser
@@ -82,7 +86,7 @@ Element providing solution to no problem in particular.
        */
       inputChanged:function(){
         var self = this;
-        self.fire('th-input-changed', self);
+        self.fire('lens-input-changed', self);
         self.setupOutput();
         self.errors = [];
         self.parseInput();
@@ -217,15 +221,15 @@ Element providing solution to no problem in particular.
        */
       outputChanged: function(){
         var self = this;
-        self.fire('th-output-changed', self);
+        self.fire('lens-output-changed', self);
         // When output is ready, fire event for other components to use
         if (self.output.length === self.inputLength){
           if(self.output[self.output.length-1]['latitude'] && self.output[self.output.length-1]['longitude']){
           console.log('geocoder output ready');
-          self.fire('th-output-ready', self.output)
+          self.fire('lens-output-ready', self.output)
           }
         }
-      }    
+      }
     });
 
   </script>
