@@ -124,6 +124,18 @@ latitude / longitude or vice versa and saves the results to Firebase.
           self.firebaseOutput.push(response.detail);
         })
       },
+      apiReady: function(){
+        var self = this;
+        self.geocoder = new google.maps.Geocoder(); 
+        self.geocodeFunc = self.reverseGeocode ? self._addLocationToOutput : self._addGeocodeToOutput;
+
+        if(self.input && self.input.length){
+          self.setupOutput();
+          self.parseInput();
+          // self.getLocations();
+        }
+
+      },
       /**
        * inputChanged - when input changes, reset the outputs, and send it back through the parser
        * @return {[type]} [description]
@@ -134,10 +146,11 @@ latitude / longitude or vice versa and saves the results to Firebase.
         self.setupOutput();
         self.errors = [];
         self.parseInput();
-
+        self.selectedLabelChanged();
         // self.hash = self.createHash(self.inputArray);
+        // console.log("input array", self.inputArray);
 
-        self.checkFirebase();
+        // self.checkFirebase();
       },
       /**
        * selectedLabelChanged - when selection changes, clear the results and restart the process of geocoding
@@ -156,7 +169,9 @@ latitude / longitude or vice versa and saves the results to Firebase.
         }
 
         self.hash = self.createHash(self.inputArray);
-        self.checkFirebase();
+        if (self.hash && self.selectedLabel){
+          self.checkFirebase();
+        }
 
       },
       /**
@@ -204,7 +219,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
        * checkFirebase - once the hash for inputs is created, check if geocodes are in firebase
        */
       checkFirebase: function(){
-        console.log('check firebase');
+        console.log('check firebase', this.hash);
         var self = this;
         self.firebase.load(self.hash);
       },
