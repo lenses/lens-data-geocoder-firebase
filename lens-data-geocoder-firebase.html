@@ -56,7 +56,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
 
       <!-- Firebase element for data storage -->
       <firebase-document 
-      location="{{firebaseLocation(hash)}}"
+      location="{{updateFirebaseLocation(hash)}}"
       data="{{geocodes}}"></firebase-document>
       
       <!-- Menu for selecting input column --> 
@@ -88,7 +88,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
       properties: {
         firebaseLocation: {
           type: String,
-          value: 'https://shining-fire-6376.firebaseio.com/',
+          value: 'https://shining-fire-6376.firebaseio.com/geocodes/',
           notify: true
         },
         _firebaseData: {
@@ -411,11 +411,11 @@ latitude / longitude or vice versa and saves the results to Firebase.
       computeIf: function (errors) {
         return errors.length > 0;
       },
-      firebaseLocation: function(hash){
+      updateFirebaseLocation: function(hash){
         var hash = hash || '';
-        var firebaseLocation = 'https://shining-fire-6376.firebaseio.com/geocodes/' + hash;
+        this.firebaseLocation = 'https://shining-fire-6376.firebaseio.com/geocodes/' + hash;
         
-        return firebaseLocation;
+        return this.firebaseLocation;
         
 
       },
