@@ -56,7 +56,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
 
       <!-- Firebase element for data storage -->
       <firebase-document 
-      location="{{getLocation(hash)}}"
+      location="{{firebaseLocation(hash)}}"
       data="{{geocodes}}"></firebase-document>
       
       <!-- Menu for selecting input column --> 
@@ -69,7 +69,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
       
       <!-- Progress and error details -->
       <!-- note: this does not work in case of fallback to google api-->
-        <p><span>{{firebaseOutput.length}}</span> of <span>{{input.length}}</span> locations processed.</p>
+        <p><span>{{_firebaseData.length}}</span> of <span>{{input.length}}</span> locations processed.</p>
       
 
       <template is="dom-if" if="{{computeIf(errors)}}">
@@ -91,12 +91,12 @@ latitude / longitude or vice versa and saves the results to Firebase.
           value: 'https://shining-fire-6376.firebaseio.com/',
           notify: true
         },
-        firebaseOutput: {
+        _firebaseData: {
           type: Array,
-          value: function () {
-            return [];
-          },
-          observer: 'firebaseOutputChanged'
+          // value: function () {
+          //   return [];
+          // },
+          observer: '_firebaseDataChanged'
         },
         input: {
           notify: true,
@@ -114,12 +114,8 @@ latitude / longitude or vice versa and saves the results to Firebase.
         selection: { observer: 'selectionChanged' }
       },
       ready: function () {
-        var self = this;
-        // self.firebase = self.$.firebase;
-        // self.setupFirebase();
-        // self.addEventListener('lens-new-geocode', function (response) {
-          // self.firebaseOutput.push(response.detail);
-        // });
+        var self = this;      
+  
       },
       apiReady: function () {
         var self = this;
@@ -130,46 +126,8 @@ latitude / longitude or vice versa and saves the results to Firebase.
           self.parseInput();
         }
       },
-      // self.getLocations();
-      /**
-       * inputChanged - when input changes, reset the outputs, and send it back through the parser
-       * @return {[type]} [description]
-       */
-      inputChanged: function () {
-        var self = this;
-        self.fire('lens-input-changed', self);
-        self.setupOutput();
-        self.errors = [];
-        self.parseInput();
-        self.selectedLabelChanged();
-      },
-      // self.hash = self.createHash(self.inputArray);
-      // console.log("input array", self.inputArray);
-      // self.checkFirebase();
-      /**
-       * selectedLabelChanged - when selection changes, clear the results and restart the process of geocoding
-       */
-      selectedLabelChanged: function () {
-        console.log('geocoder-firebase selection changed');
-        var self = this;
-        self.firebaseOutput = [];
-        self.errors = [];
-        self.setupOutput();
-        self.errors = [];
-        if (self.input.length > 0) {
-          self.inputArray = self.input.map(function (obj) {
-            return obj[self.selectedLabel];
-          });
-        } else {
-          self.inputArray = [self.input[self.selectedLabel]];
-        }
-        self.hash = self.createHash(self.inputArray);
-        console.log("new hash");
-        console.log(self.hash);
-        if (self.hash && self.selectedLabel) {
-          self.checkFirebase();
-        }
-      },
+
+
       /**
        * setupFirebase - set event listeners for responses from firebase and the appropriate responses
        */
@@ -189,11 +147,11 @@ latitude / longitude or vice versa and saves the results to Firebase.
         // });
       },
       /**
-       * createHash - converts the input into a unique identifier, used as a key to save geocodes in firebase
+       * _createHash - converts the input into a unique identifier, used as a key to save geocodes in firebase
        * @param  {Array} input - an array of strings, representing the locations that need geocodes
        * @return {String} hash - the resulting unique identifier
        */
-      createHash: function (input) {
+      _createHash: function (input) {
         console.log('create hash');
         var input = input.toString(), inputLength = input.length;
         var hash = 0;
@@ -212,80 +170,58 @@ latitude / longitude or vice versa and saves the results to Firebase.
        * checkFirebase - once the hash for inputs is created, check if geocodes are in firebase
        */
       checkFirebase: function () {
-        console.log('check firebase', this.hash);
-        var self = this;
-        self.firebase.load(self.hash);
+        // console.log('check firebase', this.hash);
+        // var self = this;
+        // self.firebase.load(self.hash);
       },
-      /**
-       * firebaseOutputChanged - when the output for firebase is finished, call saveToFirebase()
-       */
-      firebaseOutputChanged: function () {
-        var self = this;
 
-        // if (self.firebaseOutput.length === self.inputArray.length) {
-        //   self.saveToFirebase();
-        // }
-      },
       /**
        * saveToFirebase - send the collected geocodes to firebase with the hash as the identifier
        * @return {[type]} [description]
        */
       saveToFirebase: function () {
         var self = this;
-        console.log('save geocodes to firebase');
-        self.firebase.save(self.firebaseOutput, self.hash);
+        // console.log('save geocodes to firebase');
+        // self.firebase.save(self._firebaseData, self.hash);
       },
       /**
        * mapOutputFromFirebase - called when a response is received from firebase, and maps the response to the existing dataset
        * @param  {Array} geocodesArr - array of objects containing lat/lng coordinates and any potential errors
        */
-      mapOutputFromFirebase: function (geocodesArr) {
+      mapOutputFromFirebase: function () {
         console.log('combine firebase result with input data');
         var self = this;
-        self.firebaseOutput = geocodesArr;
-        self.errors = [];
-        self.output = self.input.map(function (item) {
-          // Clone new object
-          var newItem = {}, keys = Object.keys(item);
-          keys.forEach(function (key) {
-            newItem[key] = item[key];
-          });
-          geocodesArr.forEach(function (geocode) {
-            // Match coordinates to the correct place
-            if (geocode.input === item[self.selectedLabel]) {
-              newItem.latitude = geocode.latitude;
-              newItem.longitude = geocode.longitude;
-              // Collect errors to display
-              if (geocode.errors) {
-                self.errors.push(geocode.errors);
+        if (self._firebaseData && self._firebaseData.length){
+          self.errors = [];
+          self.output = self.input.map(function (item) {
+            // Clone new object
+            var newItem = {}, keys = Object.keys(item);
+            keys.forEach(function (key) {
+              newItem[key] = item[key];
+            });
+            geocodesArr.forEach(function (geocode) {
+              // Match coordinates to the correct place
+              if (geocode.input === item[self.selectedLabel]) {
+                newItem.latitude = geocode.latitude;
+                newItem.longitude = geocode.longitude;
+                // Collect errors to display
+                if (geocode.errors) {
+                  self.errors.push(geocode.errors);
+                }
               }
-            }
+            });
+            return newItem;
           });
-          return newItem;
-        });
-      },
-      /**
-       * outputChanged - when output changes, check if the entire output is ready and fire an event
-       * @return {[type]} [description]
-       */
-      outputChanged: function () {
-        var self = this;
-        self.fire('lens-output-changed', self);
-        // When output is ready, fire event for other components to use
-        if (self.output.length === self.inputLength) {
-          if (self.output[self.output.length - 1]['latitude'] && self.output[self.output.length - 1]['longitude']) {
-            console.log('geocoder output ready');
-            self.fire('lens-output-ready', self.output);
-          }
         }
       },
+
       setupOutput: function () {
         var self = this;
         console.log('reset output');
         self.output = self.input.map(function (item) {
           // if input was an array of strings, return an object with that string as 'location'
           if (typeof item === 'string') {
-            return { 'location': item };
+            return { 'location': item }; // TODO: this is not a good way to detect location... to be fixed
           }
           var newItem = {};
           var keys = Object.keys(item);
@@ -306,11 +242,11 @@ latitude / longitude or vice versa and saves the results to Firebase.
         self.setupOutput();
         self.errors = [];
         if (self.input.length > 0) {
-          self.inputArray = self.input.map(function (obj) {
+          self._geocoderInput = self.input.map(function (obj) {
             return obj[self.selectedLabel];
           });
         } else {
-          self.inputArray = [self.input[self.selectedLabel]];
+          self._geocoderInput = [self.input[self.selectedLabel]];
         }
         self.getLocations();
       },
@@ -324,7 +260,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
           // Input is a string
           case 'string':
             self.inputLength = 1;
-            self.inputArray = [self.input];
+            self._geocoderInput = [self.input];
             break;
           // Input is an array or object
           case 'object':
@@ -333,13 +269,13 @@ latitude / longitude or vice versa and saves the results to Firebase.
               self.inputLength = length;
               // Array of strings
               if (typeof self.input[0] === 'string') {
-                self.inputArray = self.input;
+                self._geocoderInput = self.input;
               } else // Array of objects
               if (typeof self.input[0] === 'object') {
 
                 self._dataAttributes = Object.keys(self.input[0]);
                 if (self.selectedLabel) {
-                  self.inputArray = self.input.map(function (obj) {
+                  self._geocoderInput = self.input.map(function (obj) {
                     return obj[self.selectedLabel];
                   });
                   break;
@@ -357,7 +293,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
                 self.inputLength = 1;
                 self._dataAttributes = Object.keys(self.input);
                 if (self.selectedLabel) {
-                  self.inputArray = [self.input[self.selectedLabel]];
+                  self._geocoderInput = [self.input[self.selectedLabel]];
                 } else {
                   break;
                 }
@@ -371,14 +307,14 @@ latitude / longitude or vice versa and saves the results to Firebase.
       },
       getLocations: function () {
         var self = this, inputLength, i = 0;
-        if (!this.inputArray) {
+        if (!this._geocoderInput) {
           return;
         }
-        inputLength = self.inputArray.length;
+        inputLength = self._geocoderInput.length;
         if (!self.gettingLocations) {
           self.gettingLocations = true;
           var interval = setInterval(function () {
-            self.geocodeFunc(self.inputArray[i], self.output[i]);
+            self.geocodeFunc(self._geocoderInput[i], self.output[i]);
             i++;
             if (i === inputLength) {
               clearInterval(interval);
@@ -475,11 +411,79 @@ latitude / longitude or vice versa and saves the results to Firebase.
       computeIf: function (errors) {
         return errors.length > 0;
       },
-      getLocation: function(hash){
-        console.log("****");
-        console.log(hash);
+      firebaseLocation: function(hash){
+        var hash = hash || '';
+        var firebaseLocation = 'https://shining-fire-6376.firebaseio.com/geocodes/' + hash;
+        
+        return firebaseLocation;
+        
 
-      }
+      },
+
+
+
+      /**
+       * inputChanged - when input changes, reset the outputs, and send it back through the parser
+       * @return {[type]} [description]
+       */
+      inputChanged: function () {
+        var self = this;
+        self.fire('lens-input-changed', self);
+        self.setupOutput();
+        self.errors = [];
+        self.parseInput();
+        self.selectedLabelChanged();
+      },
+      /**
+       * _firebaseDataChanged - when the output for firebase is finished, call saveToFirebase()
+       */
+      _firebaseDataChanged: function () {
+        var self = this;
+
+        // if (self._firebaseData.length === self._geocoderInput.length) {
+        //   self.saveToFirebase();
+        // }
+      },
+
+      /**
+       * selectedLabelChanged - when selection changes, clear the results and restart the process of geocoding
+       */
+      selectedLabelChanged: function () {
+        console.log('geocoder-firebase selection changed');
+        var self = this;
+        self._firebaseData = self._firebaseData || [];
+        self.errors = [];
+        self.setupOutput();
+        self.errors = [];
+        if (self.input.length > 0) {
+          self._geocoderInput = self.input.map(function (obj) {
+            return obj[self.selectedLabel];
+          });
+        } else {
+          self._geocoderInput = [self.input[self.selectedLabel]];
+        }
+        self.hash = self._createHash(self._geocoderInput);
+        
+        if (self.hash && self.selectedLabel) {
+          self.checkFirebase();
+        }
+      },
+
+      /**
+       * outputChanged - when output changes, check if the entire output is ready and fire an event
+       * @return {[type]} [description]
+       */
+      outputChanged: function () {
+        var self = this;
+        // self.fire('lens-output-changed', self);
+        // When output is ready, fire event for other components to use
+        if (self.output.length === self.inputLength) {
+          if (self.output[self.output.length - 1]['latitude'] && self.output[self.output.length - 1]['longitude']) {
+            console.log('geocoder output ready');
+            self.fire('lens-output-ready', self.output);
+          }
+        }
+      },
     });
   </script>
 </dom-module>
