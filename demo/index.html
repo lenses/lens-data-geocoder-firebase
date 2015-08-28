@@ -72,7 +72,7 @@
     </section>
     <section class="component">
       <label>Component:</label>
-      <lens-data-geocoder-firebase id="component"></lens-data-geocoder-firebase>
+      <lens-data-geocoder-firebase id="component" firebaseLocation="https://shining-fire-6376.firebaseio.com/geocodes/"></lens-data-geocoder-firebase>
     </section>
     <section>
       <label>Output:</label>
@@ -82,8 +82,8 @@
     <script>
       // Sample input data
       var input = new Object([
-        {"city": "New York, NY", }, 
-        {"city": "San Francisco, CA"}
+        {"city": "New York, NY", "place":"Bryant Park"}, 
+        {"city": "San Francisco, CA", "place": "Golden Gate Bridge"}
       ]);
 
       // Display input/output and pass input to the component
