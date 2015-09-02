@@ -56,7 +56,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
       <google-maps-api on-api-load="apiReady"></google-maps-api>
 
       <!-- Firebase element for data storage -->
-      <firebase-collection id="firebase" location="{{_updateFirebaseLocation(hash)}}" data="{{_firebaseData}}"></firebase-collection>
+      <firebase-collection id="firebase" location="{{_update_firebaseLocation(hash)}}" data="{{_firebaseData}}"></firebase-collection>
       
       <!-- Menu for selecting input column --> 
       <label for="label_selector">Select location column: </label> 
@@ -116,14 +116,19 @@ latitude / longitude or vice versa and saves the results to Firebase.
           readOnly: true,
           observer: '_outputChanged'
         },
-        firebaseLocation: {
-          type: String,
-          value: '',
-          notify: true
-        },
+        /**
+         * If true, this element will find the location given latitude and longitude coordinates in input.
+         * 
+         * @type Boolean
+         */
         reverseGeocode: { 
           notify: true 
         },
+        /**
+         * The name of the column that represents the location to geocode.
+         * 
+         * @type String
+         */
         selectedLabel: {
           notify: true,
           observer: '_selectedLabelChanged'
@@ -141,6 +146,22 @@ latitude / longitude or vice versa and saves the results to Firebase.
           },
           notify: true        
         },
+        /**
+         * The unique Firebase address to store geocode data.
+         * Example: 'https://shining-fire-6376.firebaseio.com/geocodes/' + <uniqueID>
+         * 
+         * @type String
+         */
+        _firebaseLocation: {
+          type: String,
+          value: '',
+          notify: true
+        },
+        /**
+         * A subset of output data to store in Firebase (just locations and coordinates)
+         * 
+         * @type Array
+         */
         _firebaseData: {
           type: Array,
           observer: '_firebaseDataChanged'
@@ -414,15 +435,12 @@ latitude / longitude or vice versa and saves the results to Firebase.
           }
         });
       },
-      _updateFirebaseLocation: function(hash){
+      _update_firebaseLocation: function(hash){
         var hash = hash || '';
-        this.firebaseLocation = 'https://shining-fire-6376.firebaseio.com/geocodes/' + hash;
+        this._firebaseLocation = 'https://shining-fire-6376.firebaseio.com/geocodes/' + hash;
         
-        return this.firebaseLocation;
-        
-
+        return this._firebaseLocation;
       },
-
 
       /** OBSERVERS **/
 
