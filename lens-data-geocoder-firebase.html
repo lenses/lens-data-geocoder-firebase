@@ -129,22 +129,22 @@ latitude / longitude or vice versa and saves the results to Firebase.
 
       },
 
-      // setupOutput: function () {
-      //   var self = this;
-      //   console.log('reset output');
-      //   self._output = self.input.map(function (item) {
-      //     // if input was an array of strings, return an object with that string as 'location'
-      //     if (typeof item === 'string') {
-      //       return { 'location': item }; // TODO: this is not a good way to detect location... to be fixed
-      //     }
-      //     var newItem = {};
-      //     var keys = Object.keys(item);
-      //     keys.forEach(function (key) {
-      //       newItem[key] = item[key];
-      //     });
-      //     return newItem;
-      //   });
-      // },
+      setupOutput: function () {
+        var self = this;
+        console.log('reset output');
+        self._output = self.input.map(function (item) {
+          // if input was an array of strings, return an object with that string as 'location'
+          if (typeof item === 'string') {
+            return { 'location': item }; // TODO: this is not a good way to detect location... to be fixed
+          }
+          var newItem = {};
+          var keys = Object.keys(item);
+          keys.forEach(function (key) {
+            newItem[key] = item[key];
+          });
+          return newItem;
+        });
+      },
 
       parseInput: function () {
         var self = this;
@@ -260,12 +260,13 @@ latitude / longitude or vice versa and saves the results to Firebase.
         if (!this._geocoderInput) {
           return;
         }
+        self.setupOutput();
         inputLength = self._geocoderInput.length;
         if (!self.gettingLocations) {
           // self._firebaseData = []; 
           self.gettingLocations = true;
           var interval = setInterval(function () {
-            self.geocodeFunc(self._geocoderInput[i]);
+            self.geocodeFunc(self._geocoderInput[i], self._output[i]);
             i++;
             if (i === inputLength) {
               clearInterval(interval);
@@ -282,22 +283,31 @@ latitude / longitude or vice versa and saves the results to Firebase.
        * @param {string} input - representing a valid location or address
        * @param {object} outputItem - the object in the array to which geolocation object should be added to
        */
-      _addGeocodeToFirebase: function (location) {
+      _addGeocodeToFirebase: function (location, outputItem) {
         var self = this;
         self.geocoder.geocode({ 'address': location }, function (results, status) {
           if (status == google.maps.GeocoderStatus.OK) {
+            
             // The names of the lat/long keys keep changing in the API but usually stay in the same order, so better to not hardcode them.
             var latLng = Object.keys(results[0].geometry.location);
-            var lng = results[0].geometry.location[latLng[1]], lat = results[0].geometry.location[latLng[0]];
+            var lng = results[0].geometry.location[latLng[1]], 
+                lat = results[0].geometry.location[latLng[0]];
            
+            // Update _firebaseData
             var geocode = {
               'input': location,
               'latitude': lat,
               'longitude': lng
             };
             self.firebase.add(geocode);
-            self._firebaseDataChanged();
-
+            
+            // Update _output (which is not read-only)
+            outputItem.latitude = lat;
+            outputItem.longitude = lng;
+            
+            // Update output (read-only)
+            self._setOutput(self._output);
+            self._outputChanged(); // Manually call outputChanged because observer does not detect deep changes
 
           } else {
             console.log('Geocode for ' + location + ' was not successful for the following reason: ' + status);
@@ -306,27 +316,32 @@ latitude / longitude or vice versa and saves the results to Firebase.
                 self._addGeocodeToFirebase(location);
               }, 1000);
             } else {
-              var errors = {
+              // Update errors
+              var error = {
                 location: location,
                 reason: status
               };
+              self.errors.push(error);
+
+              // Update _firebaseData
               var geocode = {
                 'input': location,
                 'latitude': '',
                 'longitude': '',
-                'errors': errors
+                'error': error
               };
               self.firebase.add(geocode);
-              self._firebaseDataChanged();
-              self.errors.push(errors);
-              
+    
+              // Update _output (which is not read-only)
+              outputItem.latitude = '';
+              outputItem.longitude = '';
+            
+              // Update output (read-only)
+              self._setOutput(self._output);
+              self._outputChanged(); // Manually call outputChanged because observer does not detect deep changes
             }
           }
         });
-        
-        if (self._firebaseData.length === self.input.length){
-          self.mapOutputFromFirebase();
-        }
       },
       /**
        * '_addLocationToFirebase' adds an object containing the location and coordinates to the output array
@@ -451,7 +466,8 @@ latitude / longitude or vice versa and saves the results to Firebase.
         // Wait 0.5s for retrieval of data from Firebase (there does not seem to be any event/callback for query response)
         setTimeout(function(){
           if (self.hash && self.selectedLabel && (!self._firebaseData || !self._firebaseData.length)) {
-            console.log('No data in firebase. Getting geocodes from Google API.')
+            console.log('No data in firebase. Getting geocodes from Google API.');
+
             self.getLocations();
           } else {
             self._firebaseDataChanged();
@@ -466,7 +482,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
        * @return {[type]} [description]
        */
       _outputChanged: function () {
-        
+        console.log(this.output);
         this.fire('lens-output-changed', this.output);
         // When output is ready, fire event for other components to use
         // if (self.output.length === self.inputLength) {
