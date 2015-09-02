@@ -121,11 +121,6 @@ latitude / longitude or vice versa and saves the results to Firebase.
           value: '',
           notify: true
         },
-        _firebaseData: {
-          type: Array,
-          observer: '_firebaseDataChanged'
-        },
-
         reverseGeocode: { 
           notify: true 
         },
@@ -146,6 +141,10 @@ latitude / longitude or vice versa and saves the results to Firebase.
           },
           notify: true        
         },
+        _firebaseData: {
+          type: Array,
+          observer: '_firebaseDataChanged'
+        }
       },
 
       apiReady: function () {
@@ -159,22 +158,6 @@ latitude / longitude or vice versa and saves the results to Firebase.
 
       },
 
-      _setupOutput: function () {
-        var self = this;
-        console.log('reset output');
-        self._output = self.input.map(function (item) {
-          // if input was an array of strings, return an object with that string as 'location'
-          if (typeof item === 'string') {
-            return { 'location': item }; // TODO: this is not a good way to detect location... to be fixed
-          }
-          var newItem = {};
-          var keys = Object.keys(item);
-          keys.forEach(function (key) {
-            newItem[key] = item[key];
-          });
-          return newItem;
-        });
-      },
 
       _parseInput: function () {
         var self = this;
@@ -286,7 +269,22 @@ latitude / longitude or vice versa and saves the results to Firebase.
           self._setOutput(output);
         }
       },
-
+      _setupOutput: function () {
+        var self = this;
+        console.log('reset output');
+        self._output = self.input.map(function (item) {
+          // if input was an array of strings, return an object with that string as 'location'
+          if (typeof item === 'string') {
+            return { 'location': item }; // TODO: this is not a good way to detect location... to be fixed
+          }
+          var newItem = {};
+          var keys = Object.keys(item);
+          keys.forEach(function (key) {
+            newItem[key] = item[key];
+          });
+          return newItem;
+        });
+      },
       _getLocations: function () {
         var self = this, inputLength, i = 0;
         if (!this._geocoderInput) {
