@@ -56,7 +56,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
       <google-maps-api on-api-load="apiReady"></google-maps-api>
 
       <!-- Firebase element for data storage -->
-      <firebase-collection id="firebase" location="{{updateFirebaseLocation(hash)}}" data="{{_firebaseData}}"></firebase-collection>
+      <firebase-collection id="firebase" location="{{_updateFirebaseLocation(hash)}}" data="{{_firebaseData}}"></firebase-collection>
       
       <!-- Menu for selecting input column --> 
       <label for="label_selector">Select location column: </label> 
@@ -70,7 +70,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
       <!-- note: this does not work in case of fallback to google api-->
         <p><span>{{_firebaseData.length}}</span> of <span>{{input.length}}</span> locations processed.</p>
 
-      <template is="dom-if" if="{{computeIf(errors)}}">
+      <template is="dom-if" if="{{_computeIf(errors)}}">
         <p><span>{{errors.length}}</span> location(s) NOT found:</p>
         <template is="dom-repeat" items="{{errors}}" as="error">
           <li><strong> Location: </strong><span>{{error.location}}</span> <strong> Reason: </strong>{{error.reason}}</li>
@@ -111,9 +111,6 @@ latitude / longitude or vice versa and saves the results to Firebase.
         selectedLabel: {
           notify: true,
           observer: '_selectedLabelChanged'
-        },
-        selection: { 
-          observer: '_selectionChanged' 
         }
       },
 
@@ -123,13 +120,13 @@ latitude / longitude or vice versa and saves the results to Firebase.
         self.geocoder = new google.maps.Geocoder();
         self.geocodeFunc = self.reverseGeocode ? self._addLocationToFirebase : self._addGeocodeToFirebase;
         if (self.input && self.input.length) {
-          // self.setupOutput();
-          self.parseInput();
+          // self._setupOutput();
+          self._parseInput();
         }
 
       },
 
-      setupOutput: function () {
+      _setupOutput: function () {
         var self = this;
         console.log('reset output');
         self._output = self.input.map(function (item) {
@@ -146,7 +143,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
         });
       },
 
-      parseInput: function () {
+      _parseInput: function () {
         var self = this;
         console.log('parsing input');
         
@@ -175,6 +172,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
                   });
                   break;
                 } else {
+                  // self._geocoderInput = [];
                   break;
                 }
               } else
@@ -223,22 +221,24 @@ latitude / longitude or vice versa and saves the results to Firebase.
       },
 
       /**
-       * mapOutputFromFirebase - called when a response is received from firebase, and maps the response to the existing dataset
+       * _zipFirebaseDataWithInput - called when a response is received from firebase, and maps the response to the existing dataset
        * @param  {Array} geocodesArr - array of objects containing lat/lng coordinates and any potential errors
        */
-      mapOutputFromFirebase: function () {
-        console.log('combine firebase result with input data');
+      _zipFirebaseDataWithInput: function () {
+        console.log('Zipping Firebase data with input data');
         var self = this;
         if (self._firebaseData && self._firebaseData.length){
           self.errors = [];
           var output = self.input.map(function (item) {
-            // Clone new object
-            var newItem = {}, keys = Object.keys(item);
+            // Clone input object
+            var newItem = {}, 
+                keys = Object.keys(item);
             keys.forEach(function (key) {
               newItem[key] = item[key];
             });
+
+            // Match the input terms and add the lat/lng from firebase data to the newItem
             self._firebaseData.forEach(function (geocode) {
-              // Match coordinates to the correct place
               if (geocode.input === item[self.selectedLabel]) {
                 newItem.latitude = geocode.latitude;
                 newItem.longitude = geocode.longitude;
@@ -254,13 +254,12 @@ latitude / longitude or vice versa and saves the results to Firebase.
         }
       },
 
-
-      getLocations: function () {
+      _getLocations: function () {
         var self = this, inputLength, i = 0;
         if (!this._geocoderInput) {
           return;
         }
-        self.setupOutput();
+        self._setupOutput();
         inputLength = self._geocoderInput.length;
         if (!self.gettingLocations) {
           // self._firebaseData = []; 
@@ -277,7 +276,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
           console.log('already getting locations');
         }
       },
-      // In case getLocations() is called twice with the observers
+      // In case _getLocations() is called twice with the observers
       /**
        * '_addGeocodeToFirebase' adds lat and long to the object containing the location given
        * @param {string} input - representing a valid location or address
@@ -348,6 +347,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
        * @param {string} latlng - lat and long coordinates separated by comma
        * @param {object} outputItem - the object in the array to which geolocation object should be added to
        */
+      // TODO: needs updating
       // TODO: allow for latlng to be given in different ways, or separately
       _addLocationToFirebase: function (latlng) {
         var self = this;
@@ -378,10 +378,10 @@ latitude / longitude or vice versa and saves the results to Firebase.
           }
         });
       },
-      computeIf: function (errors) {
+      _computeIf: function (errors) {
         return errors.length > 0;
       },
-      updateFirebaseLocation: function(hash){
+      _updateFirebaseLocation: function(hash){
         var hash = hash || '';
         this.firebaseLocation = 'https://shining-fire-6376.firebaseio.com/geocodes/' + hash;
         
@@ -393,24 +393,24 @@ latitude / longitude or vice versa and saves the results to Firebase.
 
       /** OBSERVERS **/
 
-      /**
-       * _selectedLabelChanged calls the _inputChanged method when the selection changes
-       * @return {[type]} [description]
-       */
-      _selectionChanged: function () {
-        console.log('geocoder selection changed');
-        var self = this;
-        self.output = [];
-        // self.setupOutput();
-        self.errors = [];
-        if (self.input.length > 0) {
-          self._geocoderInput = self.input.map(function (obj) {
-            return obj[self.selectedLabel];
-          });
-        } else {
-          self._geocoderInput = [self.input[self.selectedLabel]];
-        }
-      },
+      // /**
+      //  * _selectedLabelChanged calls the _inputChanged method when the selection changes
+      //  * @return {[type]} [description]
+      //  */
+      // _selectionChanged: function () {
+      //   console.log('geocoder selection changed');
+      //   var self = this;
+      //   self.output = [];
+      //   // self._setupOutput();
+      //   self.errors = [];
+      //   if (self.input.length > 0) {
+      //     self._geocoderInput = self.input.map(function (obj) {
+      //       return obj[self.selectedLabel];
+      //     });
+      //   } else {
+      //     self._geocoderInput = [self.input[self.selectedLabel]];
+      //   }
+      // },
 
       /**
        * _inputChanged - when input changes, reset the outputs, and send it back through the parser
@@ -419,9 +419,9 @@ latitude / longitude or vice versa and saves the results to Firebase.
       _inputChanged: function () {
         var self = this;
         self.fire('lens-input-changed', self);
-        // self.setupOutput();
+        // self._setupOutput();
         self.errors = [];
-        self.parseInput();
+        self._parseInput();
         self._selectedLabelChanged();
       },
       /**
@@ -429,21 +429,11 @@ latitude / longitude or vice versa and saves the results to Firebase.
        */
       _firebaseDataChanged: function () {
         var self = this;
-        console.log('firebase data changed');
         if ((self._firebaseData && self.input) && (self._firebaseData.length === self.input.length)){
-          console.log('data complete?');
-          console.log(self._firebaseData);
-          console.log(self._output);
-          
-          self.mapOutputFromFirebase();
-        } else {
-          console.log('data incomplete?');
-          console.log(self._firebaseData);
-          console.log(self._output);
-
-        }
+          console.log('Data received from Firebase, ready to zip with input');
+          self._zipFirebaseDataWithInput();
+        } 
       },
-
       /**
        * _selectedLabelChanged - when selection changes, clear the results and restart the process of geocoding
        */
@@ -451,29 +441,22 @@ latitude / longitude or vice versa and saves the results to Firebase.
         console.log('geocoder-firebase selection changed');
         var self = this;
         self.errors = [];
-        // self.setupOutput();
-        self.errors = [];
-        if (self.input.length > 0) {
 
-          self._geocoderInput = self.input.map(function (obj) {
-            return obj[self.selectedLabel];
-          });
-        } else {
-          self._geocoderInput = [self.input[self.selectedLabel]];
+        self._parseInput();
+
+        if (self._geocoderInput){
+          self.hash = self._createHash(self._geocoderInput);
+                  
+          // Wait 0.5s for retrieval of data from Firebase (there does not seem to be any event/callback for query response)
+          setTimeout(function(){
+            if (self.hash && self.selectedLabel && (!self._firebaseData || !self._firebaseData.length)) {
+              console.log('No data in Firebase. Getting geocodes from Google API.');
+              self._getLocations();
+            } else {
+              self._firebaseDataChanged();
+            }
+          },500)
         }
-        self.hash = self._createHash(self._geocoderInput);
-        
-        // Wait 0.5s for retrieval of data from Firebase (there does not seem to be any event/callback for query response)
-        setTimeout(function(){
-          if (self.hash && self.selectedLabel && (!self._firebaseData || !self._firebaseData.length)) {
-            console.log('No data in firebase. Getting geocodes from Google API.');
-
-            self.getLocations();
-          } else {
-            self._firebaseDataChanged();
-          }
-        },500)
- 
 
       },
 
