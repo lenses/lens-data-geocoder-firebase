@@ -70,11 +70,13 @@ latitude / longitude or vice versa and saves the results to Firebase.
       <!-- note: this does not work in case of fallback to google api-->
         <p><span>{{_firebaseData.length}}</span> of <span>{{input.length}}</span> locations processed.</p>
 
-      <template is="dom-if" if="{{_computeIf(errors)}}">
-        <p><span>{{errors.length}}</span> location(s) NOT found:</p>
-        <template is="dom-repeat" items="{{errors}}" as="error">
-          <li><strong> Location: </strong><span>{{error.location}}</span> <strong> Reason: </strong>{{error.reason}}</li>
-        </template>
+      <template is="dom-if" if="{{errors.length}}">
+        <div class="progress">
+          <p><strong><span>{{errors.length}}</span> location(s) NOT found:</strong></p>
+          <template is="dom-repeat" items="{{errors}}" as="error">
+            <li><strong> Location: </strong><span>{{error.location}}</span> <strong> Reason: </strong>{{error.reason}}</li>
+          </template>
+        </div>
       </template>
     </div> 
     
@@ -84,6 +86,36 @@ latitude / longitude or vice versa and saves the results to Firebase.
     Polymer({
       is: 'lens-data-geocoder-firebase',
       properties: {
+        /**
+         * Input data, where each item in the array is an object.
+         * 
+         * @attribute input
+         * @type Array
+         * @default []
+         */
+        input: {
+          type: Array,
+          value: function(){ 
+            return [];
+          },
+          observer: '_inputChanged'
+        },
+        /**
+         * Output data, where each item in the array is an object.
+         * 
+         * @attribute output
+         * @type Array
+         * @default []
+         */
+        output: {
+          type: Array,
+          value: function(){ 
+            return [];
+          },
+          notify: true,
+          readOnly: true,
+          observer: '_outputChanged'
+        },
         firebaseLocation: {
           type: String,
           value: '',
@@ -91,27 +123,29 @@ latitude / longitude or vice versa and saves the results to Firebase.
         },
         _firebaseData: {
           type: Array,
-          // value: function () {
-            // return [];
-          // },
           observer: '_firebaseDataChanged'
         },
-        input: {
-          notify: true,
-          observer: '_inputChanged'
-        },
-        output: {
-          notify: true,
-          readOnly: true,
-          observer: '_outputChanged'
-        },
+
         reverseGeocode: { 
           notify: true 
         },
         selectedLabel: {
           notify: true,
           observer: '_selectedLabelChanged'
-        }
+        },
+        /**
+         * A list of errors occurring while retrieving geocodes
+         *
+         * @attribute errors
+         * @type [{ location: String, reason: String }]
+         */
+        errors: {
+          type: Array,
+          value: function(){ 
+            return [];
+          },
+          notify: true        
+        },
       },
 
       apiReady: function () {
@@ -120,7 +154,6 @@ latitude / longitude or vice versa and saves the results to Firebase.
         self.geocoder = new google.maps.Geocoder();
         self.geocodeFunc = self.reverseGeocode ? self._addLocationToFirebase : self._addGeocodeToFirebase;
         if (self.input && self.input.length) {
-          // self._setupOutput();
           self._parseInput();
         }
 
@@ -243,8 +276,8 @@ latitude / longitude or vice versa and saves the results to Firebase.
                 newItem.latitude = geocode.latitude;
                 newItem.longitude = geocode.longitude;
                 // Collect errors to display
-                if (geocode.errors) {
-                  self.errors.push(geocode.errors);
+                if (geocode.error) {
+                  self.push('errors',geocode.error);
                 }
               }
             });
@@ -320,7 +353,8 @@ latitude / longitude or vice versa and saves the results to Firebase.
                 location: location,
                 reason: status
               };
-              self.errors.push(error);
+              self.push('errors', error)
+              // self.errors.push(error);
 
               // Update _firebaseData
               var geocode = {
@@ -336,7 +370,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
               outputItem.longitude = '';
             
               // Update output (read-only)
-              self._setOutput(self._output);
+              self._setOutput(self._output); // Q: Shouldn't this trigger _outputChanged?
               self._outputChanged(); // Manually call outputChanged because observer does not detect deep changes
             }
           }
@@ -370,16 +404,17 @@ latitude / longitude or vice versa and saves the results to Firebase.
                 self._addLocationToFirebase(latlng);
               }, 1000);
             } else {
-              self.errors.push({
+              self.push('errors', {
                 location: latlng,
                 reason: status
-              });
+              })
+              // self.errors.push({
+              //   location: latlng,
+              //   reason: status
+              // });
             }
           }
         });
-      },
-      _computeIf: function (errors) {
-        return errors.length > 0;
       },
       _updateFirebaseLocation: function(hash){
         var hash = hash || '';
@@ -392,25 +427,6 @@ latitude / longitude or vice versa and saves the results to Firebase.
 
 
       /** OBSERVERS **/
-
-      // /**
-      //  * _selectedLabelChanged calls the _inputChanged method when the selection changes
-      //  * @return {[type]} [description]
-      //  */
-      // _selectionChanged: function () {
-      //   console.log('geocoder selection changed');
-      //   var self = this;
-      //   self.output = [];
-      //   // self._setupOutput();
-      //   self.errors = [];
-      //   if (self.input.length > 0) {
-      //     self._geocoderInput = self.input.map(function (obj) {
-      //       return obj[self.selectedLabel];
-      //     });
-      //   } else {
-      //     self._geocoderInput = [self.input[self.selectedLabel]];
-      //   }
-      // },
 
       /**
        * _inputChanged - when input changes, reset the outputs, and send it back through the parser
@@ -461,19 +477,21 @@ latitude / longitude or vice versa and saves the results to Firebase.
       },
 
       /**
-       * _outputChanged - when output changes, check if the entire output is ready and fire an event
-       * @return {[type]} [description]
+       * The `lens-output-changed` event is fired whenever changes are observed in `output` 
+       * 
+       * @event lens-output-changed
        */
       _outputChanged: function () {
-        console.log(this.output);
-        this.fire('lens-output-changed', this.output);
+        var self = this;
+        self.fire('lens-output-changed', this.output);
+        
         // When output is ready, fire event for other components to use
-        // if (self.output.length === self.inputLength) {
-        //   if (self.output[self.output.length - 1]['latitude'] && self.output[self.output.length - 1]['longitude']) {
-        //     console.log('geocoder output ready');
-        //     self.fire('lens-output-ready', self.output);
-        //   }
-        // }
+        if (self.output.length === self.inputLength) {
+          if (self.output[self.output.length - 1]['latitude'] && self.output[self.output.length - 1]['longitude']) {
+            console.log('geocoder output ready');
+            self.fire('lens-output-ready', self.output);
+          }
+        }
       },
     });
   </script>
