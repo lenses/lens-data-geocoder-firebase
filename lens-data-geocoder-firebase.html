@@ -197,7 +197,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
        */
       _parseInput: function () {
         var self = this;
-        console.log('parsing input');
+        console.log('Parsing input');
         
         if (self.geocoder) {
           // Determine data structure of input and convert input to an array of strings
@@ -257,7 +257,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
        * @return {String} hash - the resulting unique identifier
        */
       _createHash: function (input) {
-        console.log('create hash');
+        console.log('Create hash');
         var input = input.toString(), inputLength = input.length;
         var hash = 0;
         var i, chr, len;
@@ -354,7 +354,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
             }
           }, 300);
         } else {
-          console.log('already getting locations');
+          console.log('Already getting locations');
         }
       },
       
@@ -536,7 +536,6 @@ latitude / longitude or vice versa and saves the results to Firebase.
        * _selectedLabelChanged - when selection changes, clear the results and restart the process of geocoding
        */
       _selectedLabelChanged: function () {
-        console.log('geocoder-firebase selection changed');
         var self = this;
         self.errors = [];
 
@@ -570,7 +569,7 @@ latitude / longitude or vice versa and saves the results to Firebase.
         // When output is ready, fire event for other components to use
         if (self.output.length === self.inputLength) {
           if (self.output[self.output.length - 1]['latitude'] && self.output[self.output.length - 1]['longitude']) {
-            console.log('geocoder output ready');
+            console.log('Geocoder output ready');
             self.fire('lens-output-ready', self.output);
           }
         }
