@@ -120,9 +120,11 @@ latitude / longitude or vice versa and saves the results to Firebase.
          * 
          * @attribute reverseGeocode
          * @type Boolean
-         * @default true
+         * @default false
          */
         reverseGeocode: { 
+          type: Boolean,
+          value: false,
           notify: true 
         },
         /**
@@ -290,8 +292,13 @@ latitude / longitude or vice versa and saves the results to Firebase.
             // Match the input terms and add the lat/lng from firebase data to the newItem
             self._firebaseData.forEach(function (geocode) {
               if (geocode.input === item[self.selectedLabel]) {
-                newItem.latitude = geocode.latitude;
-                newItem.longitude = geocode.longitude;
+                if (self.reverseGeocode){
+                  newItem.location = geocode.location;
+                } else {
+                  newItem.latitude = geocode.latitude;
+                  newItem.longitude = geocode.longitude;  
+                }
+                
                 // Collect errors to display
                 if (geocode.error) {
                   self.push('errors',geocode.error);
